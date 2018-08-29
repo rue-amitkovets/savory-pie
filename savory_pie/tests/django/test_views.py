@@ -21,6 +21,7 @@ from savory_pie.tests.mock_context import mock_context
 def mock_resource(name=None, resource_path=None, child_resource=None, base_regex=None):
     resource = Mock(name=name, spec=['set_base_regex'])
     resource.resource_path = resource_path
+    resource.return_on_post = False
 
     resource.allowed_methods = set()
     resource.get = Mock(name='get')
@@ -639,7 +640,7 @@ class ViewTest(unittest.TestCase):
         new_resource = mock_resource(name='new', resource_path='foo')
         root_resource.post = Mock(return_value=new_resource)
 
-        response = savory_dispatch(root_resource, method='POST', body='{}')
+        response = savory_dispatch(root_resource, method='POST', body='{"foo": "bar"}')
 
         self.assertTrue(
             call_args_sans_context(root_resource.post),
@@ -650,6 +651,26 @@ class ViewTest(unittest.TestCase):
             ]
         )
         self.assertEqual(response['Location'], 'http://localhost/api/foo')
+        self.assertIsNotNone(root_resource.post.call_args_list[0].request)
+
+    def test_post_success_returns_resource_when_indicated(self):
+        root_resource = mock_resource(name='root')
+        root_resource.allowed_methods.add('POST')
+        root_resource.return_on_post = True
+        root_resource.post.return_value = {'key': 'value'}
+
+        response = savory_dispatch(root_resource, method='POST', body='{"foo": "bar"}')
+
+        self.assertTrue(
+            call_args_sans_context(root_resource.post),
+            [
+                {
+                    'foo': 'bar'
+                }
+            ]
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.content, '{"key": "value"}')
         self.assertIsNotNone(root_resource.post.call_args_list[0].request)
 
     def test_post_with_collision_one(self):

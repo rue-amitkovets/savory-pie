@@ -55,6 +55,10 @@ class Resource(object):
 
         return allowed_methods
 
+    @property
+    def return_on_post(self):
+        return False
+
     # def get(self, ctx, params):
         """
         Optional method that is called during a GET request.

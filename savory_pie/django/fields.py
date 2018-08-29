@@ -33,7 +33,7 @@ class DjangoField(base_fields.Field):
         self._field = None
         try:
             self._field = model._meta.get_field(field_name)
-        except:
+        except Exception:
             # probably only for m2m fields
             try:
                 self._field = model._meta.get_field_by_name(field_name)[0].field
@@ -352,7 +352,7 @@ class SubModelResourceField(base_fields.SubObjectResourceField, DjangoField):
         field = None
         try:
             field = model._meta.get_field(field_name)
-        except:
+        except Exception:
             # probably only for m2m fields
             try:
                 field = model._meta.get_field_by_name(field_name)[0].field

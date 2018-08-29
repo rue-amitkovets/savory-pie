@@ -9,7 +9,7 @@ def to_datetime(milliseconds):
         value = datetime.utcfromtimestamp(int(milliseconds) / 1000)
         if isinstance(value, datetime):
             return value
-    except:
+    except Exception:
         pass
     return milliseconds
 
@@ -22,7 +22,7 @@ def to_list(items):
         values = items.split(',')
         if isinstance(values, list):
             return values
-    except:
+    except Exception:
         pass
     return items
 

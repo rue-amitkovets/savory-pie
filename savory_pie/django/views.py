@@ -309,7 +309,7 @@ def _inner_transaction(ctx, resource, request, func):
             transaction.commit()
         else:
             transaction.rollback()
-    except:
+    except Exception:
         transaction.rollback()
         raise
     return response
@@ -336,7 +336,7 @@ def _process_post(ctx, resource, request):
             resource,
             data
         )
-        return _created(ctx, request, request, new_resource)
+        return _created(ctx, resource, request, new_resource)
     except validators.ValidationError, ve:
         return _validation_errors(ctx, ve.resource, request, ve.errors)
     except MethodNotAllowedError:
@@ -408,9 +408,18 @@ def _validation_errors(ctx, resource, request, errors):
 
 
 def _created(ctx, resource, request, new_resource):
-    response = HttpResponse(status=201)
-    response['Location'] = ctx.build_resource_uri(new_resource)
-    return response
+    if resource.return_on_post:
+        # We don't need Location, ETag or streaming
+        response = HttpResponse(
+            status=201,
+            content_type=ctx.formatter.content_type
+        )
+        ctx.formatter.write_to(new_resource, response)
+        return response
+    else:
+        response = HttpResponse(status=201)
+        response['Location'] = ctx.build_resource_uri(new_resource)
+        return response
 
 
 def _content_success(ctx, resource, request, content_dict):

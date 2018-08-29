@@ -174,10 +174,7 @@ class HaystackSearchResourceTest(unittest.TestCase):
         _hash_string.assert_any_call('{"json":2}')
 
         self.assertTrue(ctx.streaming_response)
-        qs.assert_has_call(
-            mock.call.models(TestModel),
-            any_order=True,
-        )
+        self.assertEqual(qs.method_calls[0], mock.call.models(TestModel))
 
     @mock.patch('savory_pie.django.haystack_resources.SearchQuerySet')
     def test_q_filter(self, SearchQuerySet):
@@ -197,11 +194,9 @@ class HaystackSearchResourceTest(unittest.TestCase):
             '{"meta":{"count":0},"objects":[]}'
         )
 
-        qs.assert_has_call(
-            mock.call.filter('foo'),
-            mock.call.filter('bar'),
-            any_order=True,
-        )
+        self.assertEqual(qs.method_calls[0], mock.call.models(TestModel))
+        self.assertTrue('call.filter(content=<AutoQuery \'foo bar\'>)' in str(qs.method_calls[1]))
+        self.assertEqual(qs.method_calls[2], mock.call.count())
 
     @mock.patch('savory_pie.django.haystack_resources.SearchQuerySet')
     def test_updated_filter(self, SearchQuerySet):
@@ -221,7 +216,7 @@ class HaystackSearchResourceTest(unittest.TestCase):
             '{"meta":{"count":0},"objects":[]}'
         )
 
-        qs.assert_has_call(
-            mock.call.filter('2012-01-01'),
-            any_order=True,
-        )
+        self.assertEqual(qs.method_calls, [
+            mock.call.models(TestModel),
+            mock.call.count()
+        ])
